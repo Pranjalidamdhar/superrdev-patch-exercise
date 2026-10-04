@@ -1,18 +1,32 @@
 export default function TaskTable({ tasks, loading, error }) {
-  if (loading) {
-    return <div className="state-message">Loading tasks...</div>;
-  }
-
   if (error) {
-    return <div className="state-message error">Error: {error}</div>;
+    return (
+      <div className="state-message error" role="alert">
+        Error: {error}
+      </div>
+    );
   }
 
-  if (!tasks || tasks.length === 0) {
+  const hasTasks = tasks && tasks.length > 0;
+
+  // Only show the full-page loading message on the very first load
+  if (loading && !hasTasks) {
+    return (
+      <div className="state-message" role="status">
+        Loading tasks...
+      </div>
+    );
+  }
+
+  if (!hasTasks) {
     return <div className="state-message">No tasks found.</div>;
   }
 
   return (
-    <table className="task-table">
+    <table
+      className={`task-table${loading ? ' is-loading' : ''}`}
+      aria-busy={loading}
+    >
       <thead>
         <tr>
           <th>ID</th>
@@ -31,9 +45,11 @@ export default function TaskTable({ tasks, loading, error }) {
               <div className="task-desc">{task.description}</div>
             </td>
             <td>
-              <span className={`status-badge ${task.status.toLowerCase()}`}>{task.status}</span>
+              <span className={`status-badge ${(task.status || '').toLowerCase()}`}>
+                {task.status}
+              </span>
             </td>
-            <td>{task.priority}</td>
+            <td>{task.priority || '\u2014'}</td>
             <td>{task.assignee || '\u2014'}</td>
           </tr>
         ))}
