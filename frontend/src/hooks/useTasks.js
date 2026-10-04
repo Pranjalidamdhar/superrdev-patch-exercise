@@ -8,18 +8,27 @@ export function useTasks(query, status, page, pageSize) {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    setLoading(true);
+    const controller = new AbortController();
 
-    fetchTasks({ query, status, page, pageSize })
+    setLoading(true);
+    setError(null);
+
+    fetchTasks({ query, status, page, pageSize }, { signal: controller.signal })
       .then((data) => {
         setTasks(data.items);
         setTotal(data.total);
         setLoading(false);
       })
       .catch((err) => {
+        if (err.name === 'AbortError') return; // superseded by a newer request
         setError(err.message);
+        setTasks([]);
+        setTotal(0);
+        setLoading(false);
       });
-  }, [query, status, page, pageSize]);
 
+    return () => controller.abort();
+  }, [query, status, page, pageSize]);
+  
   return { tasks, total, loading, error };
 }
